@@ -1,37 +1,19 @@
-// app/not-found.tsx
-"use client";
+"use client"; // Forces client-side rendering — no prerender
 
-import { SignedOut, SignInButton } from "@clerk/nextjs";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-
-export const dynamic = "force-dynamic";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center bg-black text-white">
       <div className="text-center">
-        <h1 className="text-9xl font-black text-transparent bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text">
-          404
-        </h1>
-        <p className="text-3xl text-white/80 mt-8 mb-12">Page Not Found</p>
-
-        <SignedOut>
-          <SignInButton mode="modal">
-            <button className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl font-bold text-xl">
-              Go Home
-            </button>
-          </SignInButton>
-        </SignedOut>
-
-        <Link
-          href="/"
-          className="inline-flex items-center gap-3 mt-8 text-cyan-400 hover:text-cyan-300"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Back to Dashboard
+        <h1 className="text-6xl font-bold mb-4">404 - Page Not Found</h1>
+        <Link href="/" className="text-cyan-400 hover:underline">
+          ← Back to Home
         </Link>
       </div>
     </div>
   );
 }
+
+// ADD THIS TO PREVENT PRERENDER
+export const dynamic = "force-dynamic";
