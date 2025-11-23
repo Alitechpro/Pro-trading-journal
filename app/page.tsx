@@ -36,6 +36,9 @@ import {
   useClerk,
 } from "@clerk/nextjs";
 
+// THIS LINE KILLS THE ERROR FOREVER
+export const dynamic = "force-dynamic";
+
 interface Trade {
   id: string;
   symbol: string;
