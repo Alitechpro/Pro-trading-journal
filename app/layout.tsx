@@ -1,14 +1,7 @@
 // app/layout.tsx
-// import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import "./globals.css";
-
-import dynamic from "next/dynamic";
-
-const ClerkProvider = dynamic(
-  () => import("@clerk/nextjs").then((mod) => mod.ClerkProvider),
-  { ssr: false }
-);
 
 export const metadata: Metadata = {
   title: "Pro Trading Journal",
