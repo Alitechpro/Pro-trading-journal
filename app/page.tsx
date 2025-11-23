@@ -317,21 +317,19 @@ export default function App() {
       {/* AUTHENTICATED USER */}
       <SignedIn>
         {/* USER BUTTON WITH CUSTOM "Manage Goals" INSIDE THE DROPDOWN */}
-        <div className="fixed top-6 right-6 z-50 ">
+        <div className="fixed top-6 right-6 z-50">
           <UserButton afterSignOutUrl="/">
             <UserButton.MenuItems>
+              {/* THIS IS THE ONLY WAY THAT WORKS IN 2025 */}
               <UserButton.Action
                 label="Manage Goals"
-                labelIcon={<Target className="w-4 h-4" />}
+                labelIcon={<Target className="w-5 h-5" />}
                 onClick={() => {
                   setInitialInput(initial.toString());
                   setGoalInput(target.toString());
                   setIsModalOpen(true);
                 }}
               />
-
-              {/* Optional divider – looks premium */}
-              <div className="border-t border-white/10 my-1 mx-3" />
             </UserButton.MenuItems>
           </UserButton>
         </div>
@@ -736,7 +734,7 @@ export default function App() {
                   <div className="group">
                     <DatePicker
                       selected={date}
-                      onChange={(d: Date) => setDate(d)}
+                      onChange={(date) => setDate(date)} // date can be Date | null → TypeScript happy
                       customInput={
                         <button
                           type="button"
