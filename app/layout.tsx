@@ -1,6 +1,7 @@
 // app/layout.tsx
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -53,6 +54,7 @@ export default function RootLayout({
         </head>
         <body className="bg-black text-white antialiased overflow-x-hidden">
           {children}
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>
