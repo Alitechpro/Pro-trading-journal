@@ -17,7 +17,7 @@ interface TradeFormProps {
   date: Date | null;
   setDate: (v: Date | null) => void;
   onSubmit: () => void;
-  symbolInputRef: React.RefObject<HTMLInputElement>;
+  symbolInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export default function TradeForm({

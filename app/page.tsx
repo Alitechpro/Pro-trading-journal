@@ -40,7 +40,7 @@ export default function App() {
   const [exit, setExit] = useState("");
   const [date, setDate] = useState<Date | null>(new Date());
 
-  const symbolInputRef = useRef<HTMLInputElement>(null);
+  const symbolInputRef = useRef<HTMLInputElement | null>(null);
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
