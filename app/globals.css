@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* app/globals.css (or styles/clerk-cyberpunk.css) */
+
+/* ─────────────── CLERK CYBERPUNK 2025 – FINAL & TRULY UNBREAKABLE ─────────────── */
+
+/* Main popover card – covers all versions */
+.cl-userButtonPopoverCard,
+[data-clerk-user-button-popover-card] {
+  background: #0f0f23 !important;
+  border: 1px solid #6366f1 !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: 0 0 50px rgba(139, 92, 246, 0.5) !important;
+  border-radius: 16px !important;
+  width: 280px !important;
+  overflow: hidden !important;
+}
+
+/* Force white text & icons everywhere */
+.cl-userButtonPopoverCard *,
+[data-clerk-user-button-popover-card] * {
+  color: white !important;
+  fill: white !important;
+  font-weight: 600 !important;
+}
+
+/* Action buttons */
+.cl-userButtonPopoverActionButton,
+[data-clerk-user-button-popover-action-button] {
+  background: rgba(26, 26, 46, 0.7) !important;
+  border: 1px solid rgba(167, 139, 250, 0.3) !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  margin: 6px 12px !important;
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* Hover glow */
+.cl-userButtonPopoverActionButton:hover,
+[data-clerk-user-button-popover-action-button]:hover {
+  background: rgba(99, 102, 241, 0.45) !important;
+  border-color: #c4b5fd !important;
+  box-shadow: 0 0 30px rgba(167, 139, 250, 0.7) !important;
+  transform: translateY(-4px) scale(1.03) !important;
+}
+
+/* Icons */
+.cl-userButtonPopoverActionButton svg,
+[data-clerk-user-button-popover-action-button] svg {
+  color: #e0d6ff !important;
+  fill: #e0d6ff !important;
+  filter: drop-shadow(0 0 10px #a78bfa);
+}
+
+/* Avatar neon ring */
+.cl-userButtonAvatarBox,
+[data-clerk-user-button-avatar] {
+  border: 3px solid #a78bfa !important;
+  box-shadow:
+    0 0 20px #a78bfa,
+    0 0 40px rgba(139, 92, 246, 0.6) !important;
+  border-radius: 50% !important;
+}
+
+/* Sign out danger glow */
+[data-clerk-user-button-popover-action-button][aria-label="Sign out"],
+.cl-userButtonPopoverActionButton[data-sign-out] {
+  color: #fda4af !important;
+}
+[data-clerk-user-button-popover-action-button][aria-label="Sign out"]:hover {
+  background: rgba(239, 68, 68, 0.4) !important;
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.5) !important;
+}
+
+/* Divider */
+.cl-divider,
+hr[data-clerk] {
+  border-color: rgba(167, 139, 250, 0.2) !important;
+  margin: 8px 16px !important;
+}
+
+/* ─────────────── CYBERPUNK REACT-DATEPICKER ─────────────── */
+.cyberpunk-calendar .react-datepicker {
+  background: #0f0f23 !important;
+  border: 1px solid #6366f1 !important;
+  border-radius: 16px !important;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(99, 102, 241, 0.25) !important;
+  backdrop-filter: blur(16px) !important;
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+}
+
+.cyberpunk-calendar .react-datepicker__header {
+  background: linear-gradient(to bottom, #1e1b4b, #0f0f2d) !important;
+  border-bottom: 1px solid #6366f1 !important;
+  padding: 16px !important;
+}
+
+.cyberpunk-calendar .react-datepicker__current-month,
+.cyberpunk-calendar .react-datepicker__day-name {
+  color: #c4b5fd !important;
+  font-weight: 800 !important;
+  letter-spacing: 1px;
+}
+
+.cyberpunk-calendar .react-datepicker__day-name {
+  font-size: 0.8rem !important;
+  text-transform: uppercase;
+  color: #a5b4fc !important;
+}
+
+.cyberpunk-calendar .react-datepicker__day {
+  color: #e0e7ff !important;
+  font-weight: 600 !important;
+  width: 44px !important;
+  height: 44px !important;
+  line-height: 44px !important;
+  margin: 4px !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  transition: all 0.25s ease !important;
+}
+
+.cyberpunk-calendar .react-datepicker__day:hover {
+  background: #6366f1 !important;
+  color: white !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5) !important;
+  font-weight: 800 !important;
+}
+
+.cyberpunk-calendar .react-datepicker__day--selected {
+  background: linear-gradient(135deg, #10b981, #06d6a0) !important;
+  color: black !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.6) !important;
+}
+
+.cyberpunk-calendar .react-datepicker__day--today {
+  color: #10b981 !important;
+  font-weight: 900 !important;
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid #10b981 !important;
+}
+
+.cyberpunk-calendar .react-datepicker__day--outside-month {
+  color: #ffffff25 !important;
+  background: transparent !important;
+  pointer-events: none !important;
+}
