@@ -1,19 +1,10 @@
-// app/page.tsx
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-  useUser,
-  useClerk,
-} from "@clerk/nextjs";
-import { Target, LogOut, Sparkles } from "lucide-react";
+import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
+import { Target } from "lucide-react";
 
 // ── Imported Components ────────────────────────────────────────────────
 import GuestScreen from "@/components/ui/GuestScreen";
@@ -24,17 +15,16 @@ import TradeHistory from "@/components/trading/TradeHistory";
 import TradingCalendar from "@/components/trading/TradingCalendar";
 import CalendarDetailModal from "@/components/trading/CalendarDetailModal";
 import NukeButton from "@/components/ui/NukeButton";
+import TradeForm from "@/components/trading/TradeForm";
 
 // ── Shared Types ───────────────────────────────────────────────────────
 import { Trade, FEE_RATE } from "@/components/shared/types";
-import TradeForm from "@/components/trading/TradeForm";
 
 // ── Force dynamic rendering ────────────────────────────────────────────
 export const dynamic = "force-dynamic";
 
 export default function App() {
   const { isSignedIn, user } = useUser();
-  const { signOut } = useClerk();
 
   // ── State ──────────────────────────────────────────────────────────────
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,54 +34,58 @@ export default function App() {
   const [target, setTarget] = useState(100000);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [page, setPage] = useState(1);
-
   const [symbol, setSymbol] = useState("");
   const [capitalRisked, setCapitalRisked] = useState("");
   const [entry, setEntry] = useState("");
   const [exit, setExit] = useState("");
   const [date, setDate] = useState<Date | null>(new Date());
-  const symbolInputRef = useRef<HTMLInputElement | null>(null);
+
+  const symbolInputRef = useRef<HTMLInputElement>(null);
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   // ── Load / Save Data ───────────────────────────────────────────────────
   useEffect(() => {
-    if (isSignedIn && user) {
-      const savedTrades = localStorage.getItem(`trades_${user.id}`);
-      const savedSettings = localStorage.getItem(`settings_${user.id}`);
+    if (!isSignedIn || !user?.id) return;
 
-      if (savedTrades) setTrades(JSON.parse(savedTrades));
+    const savedTrades = localStorage.getItem(`trades_${user.id}`);
+    const savedSettings = localStorage.getItem(`settings_${user.id}`);
 
-      if (savedSettings) {
-        const { i, t } = JSON.parse(savedSettings);
+    if (savedTrades) {
+      try {
+        setTrades(JSON.parse(savedTrades));
+      } catch {}
+    }
+
+    if (savedSettings) {
+      try {
+        const { i, t } = JSON.parse(savedSettings) as { i: number; t: number };
         setInitial(i);
         setTarget(t);
         setInitialInput(i.toString());
         setGoalInput(t.toString());
-        setIsModalOpen(false);
-      } else {
-        setInitialInput("");
-        setGoalInput("");
-        setIsModalOpen(true);
-      }
+      } catch {}
+    } else {
+      setIsModalOpen(true);
     }
-  }, [isSignedIn, user]);
+  }, [isSignedIn, user?.id]);
 
   useEffect(() => {
-    if (isSignedIn && user) {
-      localStorage.setItem(`trades_${user.id}`, JSON.stringify(trades));
-      localStorage.setItem(
-        `settings_${user.id}`,
-        JSON.stringify({ i: initial, t: target })
-      );
-    }
-  }, [trades, initial, target, isSignedIn, user]);
+    if (!isSignedIn || !user?.id) return;
+
+    localStorage.setItem(`trades_${user.id}`, JSON.stringify(trades));
+    localStorage.setItem(
+      `settings_${user.id}`,
+      JSON.stringify({ i: initial, t: target })
+    );
+  }, [trades, initial, target, isSignedIn, user?.id]);
 
   // ── Handlers ───────────────────────────────────────────────────────────
   const handleStart = () => {
-    const init = parseFloat(initialInput.replace(/[^0-9]/g, "")) || 10000;
-    const goal = parseFloat(goalInput.replace(/[^0-9]/g, "")) || 100000;
+    const init = parseFloat(initialInput.replace(/[^0-9.]/g, "")) || 10000;
+    const goal = parseFloat(goalInput.replace(/[^0-9.]/g, "")) || 100000;
+
     if (init > 0 && goal > init) {
       setInitial(init);
       setTarget(goal);
@@ -105,18 +99,26 @@ export default function App() {
     const capital = parseFloat(capitalRisked);
     const entryPrice = parseFloat(entry);
     const exitPrice = parseFloat(exit);
-    if (isNaN(capital) || isNaN(entryPrice) || isNaN(exitPrice) || capital <= 0)
+
+    if (
+      isNaN(capital) ||
+      isNaN(entryPrice) ||
+      isNaN(exitPrice) ||
+      capital <= 0
+    ) {
       return;
+    }
 
     const quantity = capital / entryPrice;
     const exitValue = quantity * exitPrice;
     const totalFees = capital * FEE_RATE * 2;
     const netPnlDollar = exitValue - capital - totalFees;
     const netPnlPercent = (netPnlDollar / capital) * 100;
+
     const tradeDate = date.toISOString().split("T")[0];
 
     const newTrade: Trade = {
-      id: crypto.randomUUID(), // ← Better than Date.now() + Math.random()
+      id: crypto.randomUUID(),
       symbol: symbol.toUpperCase().trim(),
       date: tradeDate,
       capitalRisked: capital,
@@ -148,7 +150,7 @@ export default function App() {
 
   const nukeData = () => {
     localStorage.clear();
-    location.reload();
+    window.location.reload();
   };
 
   // ── Formatting Helpers ─────────────────────────────────────────────────
@@ -179,7 +181,7 @@ export default function App() {
     return `$${num.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
   };
 
-  // ── Computed Values (useMemo) ──────────────────────────────────────────
+  // ── Computed Values ────────────────────────────────────────────────────
   const {
     chartData,
     currentCapital,
@@ -189,10 +191,13 @@ export default function App() {
     totalPnlDollar,
   } = useMemo(() => {
     let capital = initial;
-    const data = [{ date: "Start", capital: Math.round(capital) }];
+    const data: { date: string; capital: number }[] = [
+      { date: "Start", capital: Math.round(capital) },
+    ];
     let feesAccumulated = 0;
 
     const sorted = [...trades].sort((a, b) => a.date.localeCompare(b.date));
+
     sorted.forEach((trade) => {
       capital += trade.pnlDollar;
       feesAccumulated += trade.fees;
@@ -217,19 +222,16 @@ export default function App() {
     };
   }, [trades, initial]);
 
-  const isAddReady = symbol && capitalRisked && entry && exit && date;
-
   // ── Render ─────────────────────────────────────────────────────────────
   return (
     <>
       {/* Global Background */}
-      <div className="fixed inset-0 -z-10">
+      <div className="fixed inset-0 -z-10 pointer-events-none">
         <div className="absolute inset-0 bg-linear-to-br from-zinc-950 via-black to-zinc-950" />
         <div className="absolute inset-0 bg-linear-to-t from-cyan-900/10 via-transparent to-purple-900/10" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-25 mix-blend-soft-light" />
       </div>
 
-      {/* Guest (Signed Out) */}
       <SignedOut>
         <GuestScreen
           initialInput={initialInput}
@@ -239,9 +241,7 @@ export default function App() {
         />
       </SignedOut>
 
-      {/* Authenticated (Signed In) */}
       <SignedIn>
-        {/* User Button with Manage Goals */}
         <div className="fixed top-6 right-6 z-50">
           <UserButton afterSignOutUrl="/">
             <UserButton.MenuItems>
@@ -258,7 +258,6 @@ export default function App() {
           </UserButton>
         </div>
 
-        {/* Goals Modal */}
         <GoalsModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
@@ -270,7 +269,6 @@ export default function App() {
           isInitialSetup={initial === 10000 && target === 100000}
         />
 
-        {/* Main Dashboard */}
         {!isModalOpen && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -305,7 +303,6 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Metrics */}
               <MetricsCards
                 currentCapital={currentCapital}
                 totalReturn={totalReturn}
@@ -315,7 +312,6 @@ export default function App() {
                 formatNumber={formatNumber}
               />
 
-              {/* Add Trade Form */}
               <TradeForm
                 symbol={symbol}
                 setSymbol={setSymbol}
@@ -333,7 +329,6 @@ export default function App() {
                 }
               />
 
-              {/* History + Chart */}
               <div className="grid lg:grid-cols-2 gap-10">
                 <TradeHistory
                   trades={trades}
@@ -349,7 +344,6 @@ export default function App() {
                 />
               </div>
 
-              {/* Calendar */}
               <TradingCalendar
                 trades={trades}
                 currentMonth={currentMonth}
@@ -358,7 +352,6 @@ export default function App() {
                 formatNumber={formatNumber}
               />
 
-              {/* Calendar Detail Modal */}
               <CalendarDetailModal
                 selectedDate={selectedDate}
                 onClose={() => setSelectedDate(null)}
@@ -366,7 +359,6 @@ export default function App() {
                 formatNumber={formatNumber}
               />
 
-              {/* Nuke Button */}
               <NukeButton onNuke={nukeData} />
             </div>
           </motion.div>
