@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+// import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import { Target } from "lucide-react";
@@ -19,6 +20,16 @@ import TradeForm from "@/components/trading/TradeForm";
 
 // ── Shared Types ───────────────────────────────────────────────────────
 import { Trade, FEE_RATE } from "@/components/shared/types";
+
+// ── Server Actions (Neon + Drizzle) ────────────────────────────────────
+import {
+  getSettings,
+  updateSettings,
+  getTrades,
+  addTrade, // renamed from createTrade for consistency with your naming
+  deleteTrade,
+  nukeData,
+} from "@/actions/trades"; // adjust path if your actions file is named differently
 
 // ── Force dynamic rendering ────────────────────────────────────────────
 export const dynamic = "force-dynamic";
@@ -39,50 +50,45 @@ export default function App() {
   const [entry, setEntry] = useState("");
   const [exit, setExit] = useState("");
   const [date, setDate] = useState<Date | null>(new Date());
-
   const symbolInputRef = useRef<HTMLInputElement | null>(null);
-
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  // ── Load / Save Data ───────────────────────────────────────────────────
+  // ── Load data from Neon DB ─────────────────────────────────────────────
   useEffect(() => {
     if (!isSignedIn || !user?.id) return;
 
-    const savedTrades = localStorage.getItem(`trades_${user.id}`);
-    const savedSettings = localStorage.getItem(`settings_${user.id}`);
-
-    if (savedTrades) {
+    async function loadData() {
       try {
-        setTrades(JSON.parse(savedTrades));
-      } catch {}
+        // Load goals/settings
+        const settings = await getSettings();
+        const initVal = Number(settings.initial);
+        const targetVal = Number(settings.target);
+
+        setInitial(initVal);
+        setTarget(targetVal);
+        setInitialInput(initVal.toString());
+        setGoalInput(targetVal.toString());
+
+        // Show modal only on first-time setup
+        if (initVal === 10000 && targetVal === 100000) {
+          setIsModalOpen(true);
+        }
+
+        // Load trades
+        const loadedTrades = await getTrades();
+        setTrades(loadedTrades);
+      } catch (err) {
+        console.error("Failed to load data from Neon:", err);
+        // Optional: show toast "Failed to load data"
+      }
     }
 
-    if (savedSettings) {
-      try {
-        const { i, t } = JSON.parse(savedSettings) as { i: number; t: number };
-        setInitial(i);
-        setTarget(t);
-        setInitialInput(i.toString());
-        setGoalInput(t.toString());
-      } catch {}
-    } else {
-      setIsModalOpen(true);
-    }
+    loadData();
   }, [isSignedIn, user?.id]);
 
-  useEffect(() => {
-    if (!isSignedIn || !user?.id) return;
-
-    localStorage.setItem(`trades_${user.id}`, JSON.stringify(trades));
-    localStorage.setItem(
-      `settings_${user.id}`,
-      JSON.stringify({ i: initial, t: target })
-    );
-  }, [trades, initial, target, isSignedIn, user?.id]);
-
   // ── Handlers ───────────────────────────────────────────────────────────
-  const handleStart = () => {
+  const handleStart = async () => {
     const init = parseFloat(initialInput.replace(/[^0-9.]/g, "")) || 10000;
     const goal = parseFloat(goalInput.replace(/[^0-9.]/g, "")) || 100000;
 
@@ -90,10 +96,16 @@ export default function App() {
       setInitial(init);
       setTarget(goal);
       setIsModalOpen(false);
+
+      try {
+        await updateSettings(init.toString(), goal.toString());
+      } catch (err) {
+        console.error("Failed to save goals:", err);
+      }
     }
   };
 
-  const addTrade = () => {
+  const addTradeHandler = async () => {
     if (!symbol || !capitalRisked || !entry || !exit || !date) return;
 
     const capital = parseFloat(capitalRisked);
@@ -117,40 +129,69 @@ export default function App() {
 
     const tradeDate = date.toISOString().split("T")[0];
 
-    const newTrade: Trade = {
-      id: crypto.randomUUID(),
+    const tradeInput = {
       symbol: symbol.toUpperCase().trim(),
       date: tradeDate,
-      capitalRisked: capital,
-      quantity,
-      entry: entryPrice,
-      exit: exitPrice,
-      pnlPercent: Number(netPnlPercent.toFixed(4)),
-      pnlDollar: Number(netPnlDollar.toFixed(6)),
-      fees: Number(totalFees.toFixed(6)),
+      capitalRisked: capital.toString(),
+      quantity: quantity.toString(),
+      entry: entryPrice.toString(),
+      exit: exitPrice.toString(),
+      pnlPercent: netPnlPercent.toFixed(4),
+      pnlDollar: netPnlDollar.toFixed(6),
+      fees: totalFees.toFixed(6),
     };
 
-    setTrades((prev) => [...prev, newTrade]);
-    setSymbol("");
-    setCapitalRisked("");
-    setEntry("");
-    setExit("");
-    setDate(new Date());
-    symbolInputRef.current?.focus();
+    try {
+      const savedTrade = await addTrade(tradeInput);
+      // Optimistic UI update
+      setTrades((prev) => [...prev, savedTrade]);
+      // Reset form
+      setSymbol("");
+      setCapitalRisked("");
+      setEntry("");
+      setExit("");
+      setDate(new Date());
+      symbolInputRef.current?.focus();
+    } catch (err) {
+      console.error("Failed to add trade:", err);
+      // TODO: show error toast
+    }
   };
 
-  const deleteTrade = (id: string) => {
-    setTrades((prev) => {
-      const updated = prev.filter((t) => t.id !== id);
-      const maxPage = Math.max(1, Math.ceil(updated.length / 6));
-      if (page > maxPage) setPage(maxPage);
-      return updated;
-    });
+  const deleteTradeHandler = async (id: string) => {
+    try {
+      const success = await deleteTrade(id);
+      if (success) {
+        setTrades((prev) => {
+          const updated = prev.filter((t) => t.id !== id);
+          const maxPage = Math.max(1, Math.ceil(updated.length / 6));
+          if (page > maxPage) setPage(maxPage);
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error("Failed to delete trade:", err);
+    }
   };
 
-  const nukeData = () => {
-    localStorage.clear();
-    window.location.reload();
+  const handleNuke = async () => {
+    if (!confirm("Delete ALL data (trades + goals)? This cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await nukeData();
+      // Reset UI state
+      setTrades([]);
+      setInitial(10000);
+      setTarget(100000);
+      setInitialInput("10000");
+      setGoalInput("100000");
+      setPage(1);
+      location.reload(); // full reset
+    } catch (err) {
+      console.error("Failed to nuke data:", err);
+    }
   };
 
   // ── Formatting Helpers ─────────────────────────────────────────────────
@@ -227,8 +268,8 @@ export default function App() {
     <>
       {/* Global Background */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
-        <div className="absolute inset-0 bg-linear-to-br from-zinc-950 via-black to-zinc-950" />
-        <div className="absolute inset-0 bg-linear-to-t from-cyan-900/10 via-transparent to-purple-900/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-black to-zinc-950" />
+        <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/10 via-transparent to-purple-900/10" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-25 mix-blend-soft-light" />
       </div>
 
@@ -279,11 +320,11 @@ export default function App() {
               {/* Hero */}
               <div className="text-center py-12">
                 <h1 className="text-7xl lg:text-9xl font-black tracking-tight">
-                  <span className="bg-linear-to-r from-cyan-400 via-cyan-300 to-white bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-cyan-400 via-cyan-300 to-white bg-clip-text text-transparent">
                     {formatNumber(initial)}
                   </span>
                   <span className="text-white/30 mx-6">→</span>
-                  <span className="bg-linear-to-r from-purple-400 via-pink-400 to-white bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-white bg-clip-text text-transparent">
                     {formatNumber(target)}
                   </span>
                 </h1>
@@ -323,7 +364,7 @@ export default function App() {
                 setExit={setExit}
                 date={date}
                 setDate={setDate}
-                onSubmit={addTrade}
+                onSubmit={addTradeHandler}
                 symbolInputRef={symbolInputRef}
               />
 
@@ -332,7 +373,7 @@ export default function App() {
                   trades={trades}
                   page={page}
                   setPage={setPage}
-                  deleteTrade={deleteTrade}
+                  deleteTrade={deleteTradeHandler}
                   formatNumber={formatNumber}
                   formatDate={formatDate}
                 />
@@ -357,7 +398,7 @@ export default function App() {
                 formatNumber={formatNumber}
               />
 
-              <NukeButton onNuke={nukeData} />
+              <NukeButton onNuke={handleNuke} />
             </div>
           </motion.div>
         )}

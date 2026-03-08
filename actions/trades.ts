@@ -1,7 +1,8 @@
+// app/actions/trade.ts
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { db } from "@/db/drizzle"; // adjust path if needed
+import { db } from "@/db/drizzle";
 import { trades, userSettings } from "@/db/schema";
 import { and, eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -24,7 +25,7 @@ export async function getSettings() {
     .limit(1);
 
   if (!settings) {
-    // Upsert default values
+    // Create default settings
     [settings] = await db
       .insert(userSettings)
       .values({
@@ -57,12 +58,25 @@ export async function updateSettings(initial: string, target: string) {
 export async function getTrades() {
   const userId = await getUserIdOrThrow();
 
-  return db
+  const rows = await db
     .select()
     .from(trades)
     .where(eq(trades.userId, userId))
-    .orderBy(desc(trades.createdAt)); // most recent first (common in journals)
-  // .orderBy(trades.date)   ← use this instead if you want chronological order
+    .orderBy(desc(trades.createdAt)); // newest first
+
+  // Convert numeric strings back to numbers
+  return rows.map((row) => ({
+    id: row.id,
+    symbol: row.symbol,
+    date: row.date,
+    capitalRisked: Number(row.capitalRisked),
+    quantity: Number(row.quantity),
+    entry: Number(row.entry),
+    exit: Number(row.exit),
+    pnlPercent: Number(row.pnlPercent),
+    pnlDollar: Number(row.pnlDollar),
+    fees: Number(row.fees),
+  }));
 }
 
 export async function addTrade(tradeData: {
@@ -88,8 +102,19 @@ export async function addTrade(tradeData: {
 
   revalidatePath("/");
 
-  // Optional: return the created trade if the client needs the ID immediately
-  return newTrade;
+  // Return with numbers instead of strings
+  return {
+    id: newTrade.id,
+    symbol: newTrade.symbol,
+    date: newTrade.date,
+    capitalRisked: Number(newTrade.capitalRisked),
+    quantity: Number(newTrade.quantity),
+    entry: Number(newTrade.entry),
+    exit: Number(newTrade.exit),
+    pnlPercent: Number(newTrade.pnlPercent),
+    pnlDollar: Number(newTrade.pnlDollar),
+    fees: Number(newTrade.fees),
+  };
 }
 
 export async function deleteTrade(id: string) {
@@ -101,10 +126,11 @@ export async function deleteTrade(id: string) {
     .returning({ deletedId: trades.id });
 
   if (deleted.length === 0) {
-    throw new Error("Trade not found or not owned by user");
+    return false; // not found or not owned
   }
 
   revalidatePath("/");
+  return true;
 }
 
 export async function nukeData() {
