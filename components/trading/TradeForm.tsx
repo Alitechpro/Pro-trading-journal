@@ -1,4 +1,3 @@
-// app/components/trading/TradeForm.tsx
 "use client";
 
 import { motion } from "framer-motion";
@@ -37,14 +36,12 @@ export default function TradeForm({
   const isAddReady = symbol && capitalRisked && entry && exit && date;
 
   return (
-    <div className="relative rounded-3xl bg-linear-to-br from-cyan-900/20 via-purple-900/20 to-pink-900/20 backdrop-blur-3xl border border-white/10 p-12 shadow-2xl overflow-visible z-10">
+    <div className="relative rounded-3xl bg-gradient-to-br from-cyan-900/20 via-purple-900/20 to-pink-900/20 backdrop-blur-3xl border border-white/10 p-12 shadow-2xl overflow-visible z-10">
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-500 rounded-full mix-blend-screen blur-3xl opacity-30 animate-pulse" />
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-purple-500 rounded-full mix-blend-screen blur-3xl opacity-30 animate-pulse delay-1000" />
-
-      <h2 className="text-5xl lg:text-6xl font-black text-center mb-12 bg-linear-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+      <h2 className="text-5xl lg:text-6xl font-black text-center mb-12 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
         ADD NEXT WINNER
       </h2>
-
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -66,7 +63,6 @@ export default function TradeForm({
             Symbol
           </p>
         </div>
-
         {/* Size */}
         <div className="group">
           <input
@@ -74,14 +70,13 @@ export default function TradeForm({
             placeholder="1000"
             value={capitalRisked}
             onChange={(e) => setCapitalRisked(e.target.value)}
-            className="w-full px-6 py-7 bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl focus:border-emerald-400 outline-none text-3xl font-black text-center text-emerald-300 placeholder-emerald-600 transition-all duration-300 group-hover:border-emerald-300 shadow-2xl [appearance:textfield] [&::-webkit-outer-spin-button]:hidden [&::-webkit-inner-spin-button]:hidden"
+            className="w-full px-6 py-7 bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl focus:border-emerald-400 outline-none text-3xl font-black text-center text-emerald-300 placeholder-emerald-600 transition-all duration-300 group-hover:border-emerald-300 shadow-2xl appearance-none [&::-webkit-outer-spin-button]:hidden [&::-webkit-inner-spin-button]:hidden"
             required
           />
           <p className="text-emerald-400 text-xl text-center mt-2 opacity-70 font-medium">
             Size ($)
           </p>
         </div>
-
         {/* Date */}
         <div className="group">
           <DatePicker
@@ -94,7 +89,7 @@ export default function TradeForm({
               >
                 <span className="text-purple-300 text-3xl font-black tracking-wider select-none">
                   {date
-                    ? new Date(date).toLocaleDateString("en-US", {
+                    ? date.toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
                       })
@@ -111,7 +106,6 @@ export default function TradeForm({
             Date
           </p>
         </div>
-
         {/* Entry */}
         <div className="group">
           <input
@@ -120,14 +114,13 @@ export default function TradeForm({
             placeholder="Entry"
             value={entry}
             onChange={(e) => setEntry(e.target.value)}
-            className="w-full px-6 py-7 bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl focus:border-yellow-400 outline-none text-3xl font-black text-center text-yellow-300 placeholder-yellow-600 transition-all duration-300 group-hover:border-yellow-300 shadow-2xl [appearance:textfield] [&::-webkit-outer-spin-button]:hidden [&::-webkit-inner-spin-button]:hidden"
+            className="w-full px-6 py-7 bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl focus:border-yellow-400 outline-none text-3xl font-black text-center text-yellow-300 placeholder-yellow-600 transition-all duration-300 group-hover:border-yellow-300 shadow-2xl appearance-none [&::-webkit-outer-spin-button]:hidden [&::-webkit-inner-spin-button]:hidden"
             required
           />
           <p className="text-yellow-400 text-xl text-center mt-2 opacity-70 font-medium">
             Buy
           </p>
         </div>
-
         {/* Exit */}
         <div className="group">
           <input
@@ -136,14 +129,13 @@ export default function TradeForm({
             placeholder="Exit"
             value={exit}
             onChange={(e) => setExit(e.target.value)}
-            className="w-full px-6 py-7 bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl focus:border-pink-400 outline-none text-3xl font-black text-center text-pink-300 placeholder-pink-600 transition-all duration-300 group-hover:border-pink-300 shadow-2xl [appearance:textfield] [&::-webkit-outer-spin-button]:hidden [&::-webkit-inner-spin-button]:hidden"
+            className="w-full px-6 py-7 bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl focus:border-pink-400 outline-none text-3xl font-black text-center text-pink-300 placeholder-pink-600 transition-all duration-300 group-hover:border-pink-300 shadow-2xl appearance-none [&::-webkit-outer-spin-button]:hidden [&::-webkit-inner-spin-button]:hidden"
             required
           />
           <p className="text-pink-400 text-xl text-center mt-2 opacity-70 font-medium">
             Sell
           </p>
         </div>
-
         {/* Submit */}
         <div className="col-span-2 md:col-span-3 lg:col-span-1">
           <motion.button
@@ -153,8 +145,8 @@ export default function TradeForm({
             disabled={!isAddReady}
             className={`relative w-full py-7 rounded-2xl font-black text-3xl shadow-2xl flex items-center justify-center gap-3 overflow-hidden transition-all duration-500 ${
               isAddReady
-                ? "bg-linear-to-r from-cyan-500 via-purple-500 to-pink-500 hover:shadow-cyan-500/50 cursor-pointer"
-                : "bg-linear-to-r from-gray-800 via-gray-900 to-gray-800 text-white/30 cursor-not-allowed"
+                ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:shadow-cyan-500/50 cursor-pointer"
+                : "bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 text-white/30 cursor-not-allowed"
             }`}
           >
             {isAddReady && (

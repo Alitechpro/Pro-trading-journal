@@ -324,9 +324,7 @@ export default function App() {
                 date={date}
                 setDate={setDate}
                 onSubmit={addTrade}
-                symbolInputRef={
-                  symbolInputRef as React.RefObject<HTMLInputElement>
-                }
+                symbolInputRef={symbolInputRef}
               />
 
               <div className="grid lg:grid-cols-2 gap-10">
