@@ -40,3 +40,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 # Pro-trading-journal
 # Pro-trading-journal
 # Pro-trading-journal
+# Pro-trading-journal
